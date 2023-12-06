@@ -1,0 +1,13 @@
+[package]
+name = "cch23-0xthefool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.6.20", features = ["macros"] }
+serde = "1.0.193"
+serde_json = "1.0.108"
+shuttle-axum = "0.34"
+shuttle-runtime = "0.34"
+tokio = "1.28.2"
+tracing = "0.1.40"
