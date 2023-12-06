@@ -1,4 +1,3 @@
-use crate::util::MyError;
 use axum::{debug_handler, Json};
 use serde::Serialize;
 
@@ -12,11 +11,11 @@ pub struct Occurence {
 }
 
 #[debug_handler]
-pub async fn count_elfs(data: String) -> Result<Json<Occurence>, MyError> {
+pub async fn count_elfs(data: String) -> Json<Occurence> {
     let mut occ = Occurence::default();
     occ.elf = data.matches("elf").count();
     occ.elf_on_a_shelf = data.matches("elf on a shelf").count();
     occ.shelf_with_no_elf = data.matches("shelf").count() - occ.elf_on_a_shelf;
 
-    Ok(Json(occ))
+    Json(occ)
 }

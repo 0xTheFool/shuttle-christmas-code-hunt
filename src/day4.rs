@@ -1,4 +1,3 @@
-use crate::util::MyError;
 use axum::{debug_handler, response::Json};
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -23,13 +22,13 @@ pub struct Reindeer {
 }
 
 #[debug_handler]
-pub async fn calculate_strength(Json(payload): Json<Vec<Reindeer>>) -> Result<Json<u32>, MyError> {
+pub async fn calculate_strength(Json(payload): Json<Vec<Reindeer>>) -> Json<u32> {
     let sum = payload.iter().map(|r| r.strength).sum();
-    Ok(Json(sum))
+    Json(sum)
 }
 
 #[debug_handler]
-pub async fn compare_reindeer(Json(payload): Json<Vec<Reindeer>>) -> Result<Json<Value>, MyError> {
+pub async fn compare_reindeer(Json(payload): Json<Vec<Reindeer>>) -> Json<Value> {
     let mut fastest = Reindeer::default();
     let mut tallest = Reindeer::default();
     let mut magician = Reindeer::default();
@@ -60,5 +59,5 @@ pub async fn compare_reindeer(Json(payload): Json<Vec<Reindeer>>) -> Result<Json
         "consumer": format!("{} ate lots of candies, but also some {}",consumer.name, consumer.favorite_food),
     }));
 
-    Ok(result)
+    result
 }
