@@ -1,11 +1,6 @@
-use axum::{
-    debug_handler,
-    extract::RawPathParams,
-    response::Json,
-};
+use axum::{debug_handler, extract::RawPathParams, response::Json};
 
 use crate::util::MyError;
-
 
 #[debug_handler]
 pub async fn cube_bits(parmas: RawPathParams) -> Result<Json<i32>, MyError> {
