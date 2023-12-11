@@ -1,10 +1,12 @@
 use axum::{http::StatusCode, response::IntoResponse};
 
+#[derive(Debug)]
 pub enum MyError {
     ParseError,
     SledRangeExceed,
     CookieNotProvided,
     InvalidBase64,
+    CustomError(String)
 }
 
 impl IntoResponse for MyError {
@@ -14,6 +16,7 @@ impl IntoResponse for MyError {
             MyError::SledRangeExceed => "Number of params exceeded",
             MyError::CookieNotProvided => "Cookie Header Missing",
             MyError::InvalidBase64 => "Invalid Base64 Encoded String",
+            MyError::CustomError(value) => value.leak(),
         };
 
         (StatusCode::BAD_REQUEST, body).into_response()
