@@ -1,10 +1,10 @@
+use crate::util::MyError;
 use axum::{debug_handler, extract::Path};
 use serde::Deserialize;
-use crate::util::MyError;
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Pokemon {
-    weight: u32,
+    weight: f32,
 }
 
 #[debug_handler]
@@ -13,7 +13,7 @@ pub async fn pokemon_weight(Path(pokemon_number): Path<u32>) -> Result<String, M
 
     match reqwest::get(url).await {
         Ok(response) => match response.json::<Pokemon>().await {
-            Ok(res) => Ok(format!("{}", res.weight / 10)),
+            Ok(res) => Ok(format!("{}", res.weight / 10.0)),
             Err(e) => Err(MyError::CustomError(e.to_string())),
         },
         Err(e) => Err(MyError::CustomError(e.to_string())),

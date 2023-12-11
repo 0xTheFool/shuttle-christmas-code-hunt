@@ -21,8 +21,6 @@ pub async fn cookie_recipe(headers: HeaderMap) -> Result<String, MyError> {
         if let Ok(bytes) = general_purpose::STANDARD.decode(recipe) {
             let result = String::from_utf8_lossy(&bytes[..]);
 
-            println!("{}", result);
-
             Ok(result.to_string())
         } else {
             Err(MyError::InvalidBase64)
@@ -32,17 +30,16 @@ pub async fn cookie_recipe(headers: HeaderMap) -> Result<String, MyError> {
     }
 }
 
-
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct AnyRecipe {
-    recipe: HashMap<String,u32>,
-    pantry: HashMap<String,u32>,
+    recipe: HashMap<String, u64>,
+    pantry: HashMap<String, u64>,
 }
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct AnyCookie {
-    cookies: u32,
-    pantry: HashMap<String,u32>,
+    cookies: u64,
+    pantry: HashMap<String, u64>,
 }
 
 #[debug_handler]
@@ -58,25 +55,29 @@ pub async fn bake_any(headers: HeaderMap) -> Result<Json<Value>, MyError> {
             let recipe = decoded_data.recipe;
             let mut pantry = decoded_data.pantry;
 
-            let cookies = recipe.iter()
-                .map(|(k,v)| {
+            let cookies = recipe
+                .iter()
+                .map(|(k, v)| {
                     if let Some(value) = pantry.get(k) {
-                        value/ v 
+                        if *v != 0 {
+                            value / v
+                        } else {
+                            u64::MAX
+                        }
                     } else {
-                        0
+                        u64::MAX
                     }
-                }).min().unwrap();
+                })
+                .min()
+                .unwrap();
 
-            for (k,v) in pantry.iter_mut() {
+            for (k, v) in pantry.iter_mut() {
                 if let Some(value) = recipe.get(k) {
                     *v = *v - value * cookies;
                 }
             }
 
-            let result = json!(AnyCookie {
-                cookies,
-                pantry,
-            });
+            let result = json!(AnyCookie { cookies, pantry });
 
             Ok(Json(result))
         } else {

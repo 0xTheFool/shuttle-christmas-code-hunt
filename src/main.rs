@@ -24,15 +24,21 @@ use day6::count_elfs;
 use day7::{bake_any, cookie_recipe};
 use day8::{pokemon_momentum, pokemon_weight};
 use tower_http::services::ServeDir;
+use util::MyError;
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
+}
+
+async fn get_error() -> MyError {
+    MyError::InternalServerError
 }
 
 #[shuttle_runtime::main]
 async fn main() -> shuttle_axum::ShuttleAxum {
     let router = Router::new()
         .route("/", get(hello_world))
+        .route("/-1/error", get(get_error))
         .route("/1/*num", get(cube_bits))
         .route("/4/strength", post(calculate_strength))
         .route("/4/contest", post(compare_reindeer))

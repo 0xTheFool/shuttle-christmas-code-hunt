@@ -15,9 +15,11 @@ pub async fn count_elfs(data: String) -> Json<Occurence> {
     let mut occ = Occurence::default();
     let search = b"elf on a shelf";
     occ.elf = data.matches("elf").count();
-    occ.elf_on_a_shelf = data.clone().into_bytes()
+    occ.elf_on_a_shelf = data
+        .clone()
+        .into_bytes()
         .windows(search.len())
-        .filter(|s| s == search )
+        .filter(|s| s == search)
         .count();
     occ.shelf_with_no_elf = data.matches("shelf").count() - occ.elf_on_a_shelf;
 
