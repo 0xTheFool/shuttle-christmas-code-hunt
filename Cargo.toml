@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.6.20", features = ["macros", "multipart"] }
 base64 = "0.21.5"
+chrono = "0.4.31"
 image = "0.24.7"
 reqwest = { version = "0.11.22", features = ["json"] }
 serde = "1.0.193"
@@ -15,3 +16,5 @@ shuttle-runtime = "0.34"
 tokio = "1.28.2"
 tower-http = { version = "0.4.0", features = ["fs"] }
 tracing = "0.1.40"
+ulid = "1.1.0"
+uuid = "1.6.1"
