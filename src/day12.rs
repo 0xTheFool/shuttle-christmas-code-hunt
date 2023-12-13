@@ -4,16 +4,11 @@ use axum::{debug_handler, Json};
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 use serde_json::{json, Value};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use ulid::Ulid;
 use uuid::Uuid;
+use crate::AppState;
 
-#[derive(Debug, Clone)]
-pub struct AppState {
-    pub packets: Arc<Mutex<HashMap<String, SystemTime>>>,
-}
 
 #[debug_handler]
 pub async fn save_string(Path(string): Path<String>, State(state): State<AppState>) {

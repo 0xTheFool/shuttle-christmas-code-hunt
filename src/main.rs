@@ -12,9 +12,10 @@ mod day7;
 mod day8;
 mod day11;
 mod day12;
+mod day13;
 mod util;
 
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime};
 use axum::{
     routing::{get, post},
     Router,
@@ -25,9 +26,17 @@ use day4::{calculate_strength, compare_reindeer};
 use day6::count_elfs;
 use day7::{bake_any, cookie_recipe};
 use day8::{pokemon_momentum, pokemon_weight};
-use day12::{load_string,save_string, AppState, convert_ulids_to_uuids,get_ulids};
+use day12::{load_string,save_string, convert_ulids_to_uuids,get_ulids};
+use day13::{sql_select, create_schema, take_orders, total_gifts, most_popular_gift};
+use sqlx::PgPool;
 use tower_http::services::ServeDir;
 use util::MyError;
+
+#[derive(Debug, Clone)]
+pub struct AppState {
+    pub packets: Arc<Mutex<HashMap<String, SystemTime>>>,
+    pub pool: PgPool,
+}
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
@@ -38,9 +47,11 @@ async fn get_error() -> MyError {
 }
 
 #[shuttle_runtime::main]
-async fn main() -> shuttle_axum::ShuttleAxum {
+async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
+
     let state = AppState {
         packets: Arc::new(Mutex::new(HashMap::new())),
+        pool,
     };
 
     let router = Router::new()
@@ -59,6 +70,12 @@ async fn main() -> shuttle_axum::ShuttleAxum {
         .route("/12/load/:string", get(load_string))
         .route("/12/ulids", post(convert_ulids_to_uuids))
         .route("/12/ulids/:weekday", post(get_ulids))
+        .route("/13/sql", get(sql_select))
+        .route("/13/reset", post(create_schema))
+        .route("/13/orders", post(take_orders))
+        .route("/13/orders/total", get(total_gifts))
+        .route("/13/orders/popular", get(most_popular_gift))
+
         .nest_service("/11/assets", ServeDir::new("assets"))
         .with_state(state);
 
