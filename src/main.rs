@@ -13,15 +13,17 @@ mod day8;
 mod day11;
 mod day12;
 mod day13;
+mod day14;
 mod util;
 
-use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime};
+use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime, path::PathBuf};
 use axum::{
     routing::{get, post},
     Router,
 };
 use day1::cube_bits;
 use day11::get_no_of_red_pixels;
+use day14::{render_html_unsafe, render_html_safe};
 use day4::{calculate_strength, compare_reindeer};
 use day6::count_elfs;
 use day7::{bake_any, cookie_recipe};
@@ -31,6 +33,7 @@ use day13::{sql_select, create_schema, take_orders, total_gifts, most_popular_gi
 use sqlx::PgPool;
 use tower_http::services::ServeDir;
 use util::MyError;
+
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -75,8 +78,9 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::Shut
         .route("/13/orders", post(take_orders))
         .route("/13/orders/total", get(total_gifts))
         .route("/13/orders/popular", get(most_popular_gift))
-
-        .nest_service("/11/assets", ServeDir::new("assets"))
+        .route("/14/unsafe",post(render_html_unsafe))
+        .route("/14/safe",post(render_html_safe))
+        .nest_service("/11/assets", ServeDir::new(PathBuf::from("assets")))
         .with_state(state);
 
     Ok(router.into())
