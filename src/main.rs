@@ -14,6 +14,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 mod util;
 
 use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime, path::PathBuf};
@@ -24,6 +25,7 @@ use axum::{
 use day1::cube_bits;
 use day11::get_no_of_red_pixels;
 use day14::{render_html_unsafe, render_html_safe};
+use day15::{validate, game_of_the_year};
 use day4::{calculate_strength, compare_reindeer};
 use day6::count_elfs;
 use day7::{bake_any, cookie_recipe};
@@ -80,6 +82,8 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::Shut
         .route("/13/orders/popular", get(most_popular_gift))
         .route("/14/unsafe",post(render_html_unsafe))
         .route("/14/safe",post(render_html_safe))
+        .route("/15/nice", post(validate) )
+        .route("/15/game", post(game_of_the_year))
         .nest_service("/11/assets", ServeDir::new(PathBuf::from("assets")))
         .with_state(state);
 
