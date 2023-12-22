@@ -16,7 +16,7 @@ pub struct Body {
 #[debug_handler]
 pub async fn render_html_unsafe(Json(data): Json<Body>) -> Html<&'static str> {
     let html = format!(
-"<html>
+        "<html>
   <head>
     <title>CCH23 Day 14</title>
   </head>
@@ -31,7 +31,9 @@ pub async fn render_html_unsafe(Json(data): Json<Body>) -> Html<&'static str> {
 
 #[debug_handler]
 pub async fn render_html_safe(Json(data): Json<Body>) -> Html<&'static str> {
-  let template = BaseTemplate { body: &data.content };
-  let reply_html = template.render().unwrap();
-  Html(reply_html.leak())
+    let template = BaseTemplate {
+        body: &data.content,
+    };
+    let reply_html = template.render().unwrap();
+    Html(reply_html.leak())
 }

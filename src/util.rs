@@ -20,7 +20,7 @@ impl IntoResponse for MyError {
             MyError::InvalidBase64 => "Invalid Base64 Encoded String",
             MyError::CustomError(value) => value.leak(),
             MyError::InternalServerError => {
-                status_code = StatusCode::INTERNAL_SERVER_ERROR; 
+                status_code = StatusCode::INTERNAL_SERVER_ERROR;
                 ""
             }
         };

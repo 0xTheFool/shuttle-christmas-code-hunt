@@ -5,41 +5,53 @@
  * */
 
 mod day1;
-mod day4;
-mod day5;
-mod day6;
-mod day7;
-mod day8;
 mod day11;
 mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day18;
+mod day19;
+mod day20;
+mod day4;
+mod day5;
+mod day6;
+mod day7;
+mod day8;
 mod util;
 
-use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime, path::PathBuf};
 use axum::{
     routing::{get, post},
     Router,
 };
 use day1::cube_bits;
 use day11::get_no_of_red_pixels;
-use day14::{render_html_unsafe, render_html_safe};
-use day15::{validate, game_of_the_year};
+use day12::{convert_ulids_to_uuids, get_ulids, load_string, save_string};
+use day13::{create_schema, most_popular_gift, sql_select, take_orders, total_gifts};
+use day14::{render_html_safe, render_html_unsafe};
+use day15::{game_of_the_year, validate};
+use day18::{create_schema_18, take_regions, total_regions, top_list};
+use day19::{websocket_handler, websocket_handler_room, reset_views, get_views, RoomState};
+use day20::{get_archive_files, get_archive_files_size, task2_cookie};
 use day4::{calculate_strength, compare_reindeer};
 use day6::count_elfs;
 use day7::{bake_any, cookie_recipe};
 use day8::{pokemon_momentum, pokemon_weight};
-use day12::{load_string,save_string, convert_ulids_to_uuids,get_ulids};
-use day13::{sql_select, create_schema, take_orders, total_gifts, most_popular_gift};
 use sqlx::PgPool;
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::SystemTime,
+};
 use tower_http::services::ServeDir;
 use util::MyError;
-
 
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub packets: Arc<Mutex<HashMap<String, SystemTime>>>,
+    pub rooms: Arc<Mutex<HashMap<u64,RoomState>>>,
+    pub total_views: Arc<Mutex<u64>>,
     pub pool: PgPool,
 }
 
@@ -53,9 +65,10 @@ async fn get_error() -> MyError {
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
-
     let state = AppState {
+        rooms: Arc::new(Mutex::new(HashMap::new())),
         packets: Arc::new(Mutex::new(HashMap::new())),
+        total_views: Arc::new(Mutex::new(0)),
         pool,
     };
 
@@ -80,10 +93,22 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::Shut
         .route("/13/orders", post(take_orders))
         .route("/13/orders/total", get(total_gifts))
         .route("/13/orders/popular", get(most_popular_gift))
-        .route("/14/unsafe",post(render_html_unsafe))
-        .route("/14/safe",post(render_html_safe))
-        .route("/15/nice", post(validate) )
+        .route("/14/unsafe", post(render_html_unsafe))
+        .route("/14/safe", post(render_html_safe))
+        .route("/15/nice", post(validate))
         .route("/15/game", post(game_of_the_year))
+        .route("/18/reset", post(create_schema_18))
+        .route("/18/orders", post(take_orders))
+        .route("/18/regions", post(take_regions))
+        .route("/18/regions/total", get(total_regions))
+        .route("/18/regions/top_list/:number",get(top_list))
+        .route("/19/ws/ping",get(websocket_handler))
+        .route("/19/reset",post(reset_views))
+        .route("/19/views",get(get_views))
+        .route("/19/ws/room/:number/user/:string",get(websocket_handler_room))
+        .route("/20/archive_files",post(get_archive_files))
+        .route("/20/archive_files_size",post(get_archive_files_size))
+        .route("/20/cookie", post(task2_cookie))
         .nest_service("/11/assets", ServeDir::new(PathBuf::from("assets")))
         .with_state(state);
 

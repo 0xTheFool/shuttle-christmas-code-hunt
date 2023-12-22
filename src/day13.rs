@@ -14,7 +14,7 @@ pub async fn sql_select(State(state): State<AppState>) -> String {
     format!("{}", row.0)
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, sqlx::FromRow, serde::Serialize)]
 pub struct Order {
     id: i32,
     region_id: i32,
