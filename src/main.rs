@@ -13,6 +13,7 @@ mod day15;
 mod day18;
 mod day19;
 mod day20;
+mod day21;
 mod day4;
 mod day5;
 mod day6;
@@ -30,13 +31,15 @@ use day12::{convert_ulids_to_uuids, get_ulids, load_string, save_string};
 use day13::{create_schema, most_popular_gift, sql_select, take_orders, total_gifts};
 use day14::{render_html_safe, render_html_unsafe};
 use day15::{game_of_the_year, validate};
-use day18::{create_schema_18, take_regions, total_regions, top_list};
-use day19::{websocket_handler, websocket_handler_room, reset_views, get_views, RoomState};
+use day18::{create_schema_18, take_regions, top_list, total_regions};
+use day19::{get_views, reset_views, websocket_handler, websocket_handler_room, RoomState};
 use day20::{get_archive_files, get_archive_files_size, task2_cookie};
+use day21::{country_lookup, s2_to_dms};
 use day4::{calculate_strength, compare_reindeer};
 use day6::count_elfs;
 use day7::{bake_any, cookie_recipe};
 use day8::{pokemon_momentum, pokemon_weight};
+use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 use std::{
     collections::HashMap,
@@ -50,9 +53,10 @@ use util::MyError;
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub packets: Arc<Mutex<HashMap<String, SystemTime>>>,
-    pub rooms: Arc<Mutex<HashMap<u64,RoomState>>>,
+    pub rooms: Arc<Mutex<HashMap<u64, RoomState>>>,
     pub total_views: Arc<Mutex<u64>>,
     pub pool: PgPool,
+    pub secrets: Option<String>,
 }
 
 async fn hello_world() -> &'static str {
@@ -64,12 +68,17 @@ async fn get_error() -> MyError {
 }
 
 #[shuttle_runtime::main]
-async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
+async fn main(
+    #[shuttle_shared_db::Postgres] pool: PgPool,
+    #[shuttle_secrets::Secrets] secrets: SecretStore,
+) -> shuttle_axum::ShuttleAxum {
+    
     let state = AppState {
         rooms: Arc::new(Mutex::new(HashMap::new())),
         packets: Arc::new(Mutex::new(HashMap::new())),
         total_views: Arc::new(Mutex::new(0)),
         pool,
+        secrets: secrets.get("OPEN_CAGE_KEY"),
     };
 
     let router = Router::new()
@@ -101,14 +110,19 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::Shut
         .route("/18/orders", post(take_orders))
         .route("/18/regions", post(take_regions))
         .route("/18/regions/total", get(total_regions))
-        .route("/18/regions/top_list/:number",get(top_list))
-        .route("/19/ws/ping",get(websocket_handler))
-        .route("/19/reset",post(reset_views))
-        .route("/19/views",get(get_views))
-        .route("/19/ws/room/:number/user/:string",get(websocket_handler_room))
-        .route("/20/archive_files",post(get_archive_files))
-        .route("/20/archive_files_size",post(get_archive_files_size))
+        .route("/18/regions/top_list/:number", get(top_list))
+        .route("/19/ws/ping", get(websocket_handler))
+        .route("/19/reset", post(reset_views))
+        .route("/19/views", get(get_views))
+        .route(
+            "/19/ws/room/:number/user/:string",
+            get(websocket_handler_room),
+        )
+        .route("/20/archive_files", post(get_archive_files))
+        .route("/20/archive_files_size", post(get_archive_files_size))
         .route("/20/cookie", post(task2_cookie))
+        .route("/21/coords/:binary", get(s2_to_dms))
+        .route("/21/country/:binary", get(country_lookup))
         .nest_service("/11/assets", ServeDir::new(PathBuf::from("assets")))
         .with_state(state);
 
